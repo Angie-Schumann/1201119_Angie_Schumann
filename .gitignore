@@ -1,0 +1,28 @@
+# =============================================================
+# .GITIGNORE
+# Archivos que NO deben subirse al repositorio
+# =============================================================
+
+# Variables de entorno con credenciales sensibles
+.env
+.env.local
+.env.production
+
+# Dependencias de Node (se instalan con npm install)
+node_modules/
+frontend/node_modules/
+
+# Build compilado de Vue (se genera con npm run build)
+frontend/dist/
+
+# Cache de Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Archivos del sistema operativo
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log

@@ -1,0 +1,14 @@
+#!/bin/bash
+# Levanta los dos port-forward en segundo plano y abre el navegador
+
+echo "Iniciando Vitalis en Kubernetes..."
+
+kubectl port-forward service/frontend-service 8080:80 &
+kubectl port-forward service/backend-service 5510:5000 &
+
+echo "Frontend: http://localhost:8080"
+echo "Backend:  http://localhost:5510/api/health"
+echo ""
+echo "Presiona Ctrl+C para detener todo"
+
+wait

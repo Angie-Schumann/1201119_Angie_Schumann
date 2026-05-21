@@ -1,0 +1,528 @@
+/* =============================================================
+   STYLES.CSS - Estilos Globales de Vitalis
+   
+   TEORIA DEL COLOR APLICADA:
+   Armonia MONOCROMATICA con azul marino como color base.
+   Segun la psicologia del color:
+   - Azul oscuro/marino: confianza, profesionalismo, seriedad medica
+   - Blanco: limpieza, pureza, claridad clinica
+   - Gris pizarra: neutralidad, elegancia, sobriedead
+   - Verde SOLO para confirmaciones exitosas (no para "desactivar")
+   - Rojo SOLO para acciones destructivas (eliminar)
+   
+   Se evitan los azules brillantes/saturados porque:
+   - Transmiten energia juvenil, no seriedad medica
+   - El armonia monomatica con navy/slate es mas elegante
+   ============================================================= */
+
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Lora:wght@500;600&display=swap');
+
+/* Variables CSS — paleta profesional monocromatica */
+:root {
+  /* Escala de azul marino profesional */
+  --color-navy-900:    #0A1628;   /* Muy oscuro - sidebar */
+  --color-navy-800:    #0F2240;   /* Oscuro - sidebar hover */
+  --color-navy-700:    #163358;   /* Headers del sidebar */
+  --color-navy-600:    #1E4A7A;   /* Color primario de accion */
+  --color-navy-500:    #2563A8;   /* Primario hover */
+  --color-navy-400:    #3B7DD8;   /* Acentos interactivos */
+  --color-navy-100:    #DDEAF8;   /* Fondos activos/seleccionados */
+  --color-navy-50:     #EFF5FC;   /* Fondo de cards secundarias */
+
+  /* Escala de grises azulados (slate) */
+  --color-slate-700:   #334155;   /* Texto secundario fuerte */
+  --color-slate-500:   #64748B;   /* Texto secundario suave */
+  --color-slate-300:   #CBD5E1;   /* Bordes */
+  --color-slate-200:   #E2E8F0;   /* Bordes suaves / separadores */
+  --color-slate-100:   #F1F5F9;   /* Fondo general de la app */
+  --color-slate-50:    #F8FAFC;   /* Fondo de inputs */
+
+  /* Aliases semanticos — lo que usa el CSS del resto */
+  --color-fondo:         var(--color-slate-100);
+  --color-fondo-card:    #FFFFFF;
+  --color-primario:      var(--color-navy-600);
+  --color-primario-dark: var(--color-navy-800);
+  --color-primario-light:var(--color-navy-100);
+  --color-acento:        var(--color-navy-400);
+  --color-texto:         var(--color-navy-900);
+  --color-texto-suave:   var(--color-slate-500);
+  --color-borde:         var(--color-slate-300);
+
+  /* Colores semanticos — SOLO para su proposito correcto */
+  --color-exito:         #059669;   /* Verde: SOLO confirmaciones */
+  --color-peligro:       #DC2626;   /* Rojo: SOLO eliminar/error */
+  --color-neutro:        #475569;   /* Gris pizarra: acciones neutras como desactivar */
+  --color-advertencia:   #B45309;   /* Ambar oscuro: alertas */
+
+  --sombra-card:  0 1px 3px rgba(15, 34, 64, 0.08), 0 1px 2px rgba(15, 34, 64, 0.06);
+  --sombra-hover: 0 4px 16px rgba(15, 34, 64, 0.12), 0 2px 6px rgba(15, 34, 64, 0.08);
+  --radio-borde:  12px;
+  --radio-boton:  8px;
+  --transicion:   all 0.2s ease;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  background-color: var(--color-fondo);
+  color: var(--color-texto);
+  line-height: 1.6;
+  min-height: 100vh;
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* =============================================================
+   LAYOUT PRINCIPAL
+   ============================================================= */
+
+.app-layout {
+  display: flex;
+  min-height: 100vh;
+}
+
+/* Sidebar: azul marino profundo — transmite autoridad y confianza medica */
+.sidebar {
+  width: 248px;
+  background: linear-gradient(175deg, #1A3A6B 0%, #1E5FA8 100%);
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  height: 100vh;
+  left: 0;
+  top: 0;
+  z-index: 100;
+  
+}
+
+.sidebar-logo {
+  padding: 26px 22px 22px;
+  border-bottom: 1px solid rgba(255,255,255,0.07);
+}
+
+.sidebar-logo h1 {
+  font-family: 'Lora', serif;
+  font-size: 1.45rem;
+  color: #FFFFFF;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+}
+
+.sidebar-nav {
+  flex: 1;
+  padding: 16px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.nav-link {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 11px 14px;
+  border-radius: 8px;
+  color: rgba(255, 255, 255, 0.55);
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 0.9rem;
+  transition: var(--transicion);
+  cursor: pointer;
+  border: none;
+  background: none;
+  width: 100%;
+  text-align: left;
+  letter-spacing: 0.1px;
+}
+
+.nav-link:hover {
+  background: rgba(255,255,255,0.07);
+  color: rgba(255,255,255,0.9);
+}
+
+.nav-link.activo {
+  background: rgba(255,255,255,0.15);
+  color: #FFFFFF;
+  font-weight: 600;
+}
+
+.nav-link .icono {
+  font-size: 1.1rem;
+  min-width: 20px;
+  opacity: 0.85;
+}
+
+.sidebar-footer {
+  padding: 18px 22px;
+  border-top: 1px solid rgba(255,255,255,0.07);
+}
+
+.sidebar-footer p {
+  font-size: 0.72rem;
+  color: rgba(255,255,255,0.25);
+  text-align: center;
+  letter-spacing: 0.3px;
+}
+
+.main-content {
+  margin-left: 248px;
+  flex: 1;
+  padding: 30px 36px;
+  min-height: 100vh;
+}
+
+/* =============================================================
+   CABECERA DE PAGINA
+   ============================================================= */
+
+.page-header {
+  margin-bottom: 26px;
+}
+
+.page-header h2 {
+  font-family: 'Lora', serif;
+  font-size: 1.7rem;
+  color: var(--color-navy-900);
+  font-weight: 600;
+  letter-spacing: -0.2px;
+}
+
+.page-header p {
+  color: var(--color-texto-suave);
+  margin-top: 3px;
+  font-size: 0.88rem;
+}
+
+/* =============================================================
+   CARDS
+   ============================================================= */
+
+.card {
+  background: var(--color-fondo-card);
+  border-radius: var(--radio-borde);
+  padding: 22px;
+  box-shadow: var(--sombra-card);
+  border: 1px solid var(--color-slate-200);
+  transition: var(--transicion);
+}
+
+.card:hover {
+  box-shadow: var(--sombra-hover);
+}
+
+.cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 18px;
+}
+
+/* =============================================================
+   BOTONES
+   Cada color tiene un proposito semantico claro segun la
+   teoria del color. Verde solo = exito. Rojo solo = peligro.
+   Acciones neutrales usan gris pizarra.
+   ============================================================= */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 18px;
+  border-radius: var(--radio-boton);
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-weight: 600;
+  font-size: 0.875rem;
+  cursor: pointer;
+  border: none;
+  transition: var(--transicion);
+  text-decoration: none;
+  letter-spacing: 0.1px;
+}
+
+/* Accion principal: azul marino — confianza */
+.btn-primario {
+  background: var(--color-primario);
+  color: white;
+  box-shadow: 0 1px 3px rgba(30, 74, 122, 0.3);
+}
+.btn-primario:hover {
+  background: var(--color-navy-500);
+  box-shadow: 0 3px 10px rgba(30, 74, 122, 0.35);
+  transform: translateY(-1px);
+}
+
+/* Accion secundaria: sin relleno, solo borde */
+.btn-secundario {
+  background: #475569;
+  color: white;
+  border: none;
+}
+.btn-secundario:hover {
+  background: #334155;
+}
+
+/* Peligro: SOLO para eliminar/destruir — rojo claro */
+.btn-peligro {
+  background: #DC2626;
+  color: white;
+  border: none;
+}
+.btn-peligro:hover {
+  background: #B91C1C;
+}
+
+/* Exito: SOLO para confirmar/completar — verde */
+.btn-exito {
+  background: #059669;
+  color: white;
+  border: none;
+}
+.btn-exito:hover {
+  background: #047857;
+}
+
+/* Neutro: para acciones sin polaridad clara (desactivar, pausar) */
+.btn-neutro {
+  background: #64748B;
+  color: white;
+  border: none;
+}
+.btn-neutro:hover {
+  background: #475569;
+}
+
+.btn-sm {
+  padding: 6px 13px;
+  font-size: 0.8rem;
+}
+
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none !important;
+}
+
+/* =============================================================
+   FORMULARIOS
+   ============================================================= */
+
+.form-grupo {
+  margin-bottom: 15px;
+}
+
+.form-grupo label {
+  display: block;
+  font-weight: 600;
+  font-size: 0.82rem;
+  color: var(--color-slate-700);
+  margin-bottom: 5px;
+  letter-spacing: 0.2px;
+}
+
+.form-grupo input,
+.form-grupo textarea,
+.form-grupo select {
+  width: 100%;
+  padding: 9px 13px;
+  border: 1.5px solid var(--color-slate-300);
+  border-radius: 7px;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 0.9rem;
+  color: var(--color-texto);
+  background: var(--color-slate-50);
+  transition: var(--transicion);
+  outline: none;
+}
+
+.form-grupo input:focus,
+.form-grupo textarea:focus,
+.form-grupo select:focus {
+  border-color: var(--color-primario);
+  background: white;
+  box-shadow: 0 0 0 3px rgba(30, 74, 122, 0.1);
+}
+
+.form-grupo textarea {
+  resize: vertical;
+  min-height: 78px;
+}
+
+.form-acciones {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px solid var(--color-slate-200);
+}
+
+/* =============================================================
+   MODAL
+   ============================================================= */
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(10, 22, 40, 0.5);
+  backdrop-filter: blur(3px);
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  animation: fadeIn 0.15s ease;
+}
+
+.modal {
+  background: white;
+  border-radius: var(--radio-borde);
+  padding: 26px;
+  width: 100%;
+  max-width: 520px;
+  box-shadow: 0 20px 50px rgba(10, 22, 40, 0.2);
+  animation: slideUp 0.2s ease;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 18px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--color-slate-200);
+}
+
+.modal-header h3 {
+  font-family: 'Lora', serif;
+  font-size: 1.2rem;
+  color: var(--color-navy-900);
+  font-weight: 600;
+}
+
+.btn-cerrar {
+  background: none;
+  border: none;
+  font-size: 1.3rem;
+  color: var(--color-texto-suave);
+  cursor: pointer;
+  padding: 4px;
+  line-height: 1;
+  transition: var(--transicion);
+  border-radius: 4px;
+}
+.btn-cerrar:hover {
+  color: var(--color-peligro);
+  background: #FEF2F2;
+}
+
+/* =============================================================
+   BADGES
+   ============================================================= */
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 9px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+}
+
+/* Verde para "activo" — semanticamente correcto */
+.badge-activo     { background: #F0FDF4; color: #166534; border: 1px solid #BBF7D0; }
+/* Gris para "inactivo" — neutro, no negativo ni positivo */
+.badge-inactivo   { background: var(--color-slate-100); color: var(--color-slate-500); border: 1px solid var(--color-slate-300); }
+/* Azul para "pendiente" — accion requerida, no urgente */
+.badge-pendiente  { background: var(--color-navy-100); color: var(--color-navy-600); border: 1px solid #BFDBFE; }
+/* Verde para "completada" — resultado positivo */
+.badge-completada { background: #F0FDF4; color: #166534; border: 1px solid #BBF7D0; }
+
+/* =============================================================
+   ESTADOS VACIOS Y CARGA
+   ============================================================= */
+
+.estado-vacio {
+  text-align: center;
+  padding: 52px 24px;
+  color: var(--color-texto-suave);
+}
+
+.estado-vacio .icono-grande {
+  font-size: 2.8rem;
+  margin-bottom: 14px;
+  opacity: 0.35;
+}
+
+.estado-vacio h3 {
+  font-size: 1.05rem;
+  margin-bottom: 6px;
+  color: var(--color-slate-700);
+  font-weight: 600;
+}
+
+.estado-vacio p {
+  font-size: 0.87rem;
+}
+
+.spinner {
+  width: 36px;
+  height: 36px;
+  border: 3px solid var(--color-slate-200);
+  border-top-color: var(--color-primario);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  margin: 48px auto;
+}
+
+/* =============================================================
+   ALERTAS
+   ============================================================= */
+
+.alerta {
+  padding: 11px 15px;
+  border-radius: 8px;
+  font-size: 0.87rem;
+  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 500;
+}
+
+.alerta-error   { background: #FEF2F2; color: #991B1B; border: 1px solid #FECACA; }
+.alerta-exito   { background: #F0FDF4; color: #166534; border: 1px solid #BBF7D0; }
+.alerta-info    { background: var(--color-navy-100); color: var(--color-navy-600); border: 1px solid #BFDBFE; }
+
+/* =============================================================
+   ANIMACIONES
+   ============================================================= */
+
+@keyframes fadeIn  { from { opacity: 0; } to { opacity: 1; } }
+@keyframes slideUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes spin    { to { transform: rotate(360deg); } }
+
+.fade-enter-active, .fade-leave-active { transition: opacity 0.2s ease; }
+.fade-enter-from, .fade-leave-to       { opacity: 0; }
+
+/* =============================================================
+   UTILIDADES
+   ============================================================= */
+
+.flex           { display: flex; }
+.items-center   { align-items: center; }
+.justify-between{ justify-content: space-between; }
+.gap-2          { gap: 8px; }
+.gap-3          { gap: 12px; }
+.mt-4           { margin-top: 16px; }
+.mb-4           { margin-bottom: 16px; }
+.text-center    { text-align: center; }
+.text-suave     { color: var(--color-texto-suave); font-size: 0.87rem; }
+.font-bold      { font-weight: 700; }
+.w-full         { width: 100%; }

@@ -1,0 +1,122 @@
+# =============================================================
+# DOCKER COMPOSE - ORQUESTADOR DE SERVICIOS
+# Define los 3 microservicios, la red interna y los volumenes
+# Version 3.8 es compatible con Docker Engine 19.03+
+# =============================================================
+
+version: "3.8"
+
+services:
+
+  # -----------------------------------------------------------
+  # SERVICIO 1: MONGODB (Base de datos)
+  # - No se expone al exterior (sin "ports" publicos)
+  # - Solo accesible desde dentro de la red "med_network"
+  # - Las credenciales vienen del archivo .env
+  # -----------------------------------------------------------
+  mongo:
+    image: mongo:6.0          # Imagen oficial de MongoDB version 6
+    container_name: mongo_db  # Nombre del contenedor para identificarlo
+    restart: unless-stopped   # Se reinicia automaticamente si falla
+
+    environment:
+      # Variables tomadas del archivo .env (nunca hardcodeadas aqui)
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD}
+      MONGO_INITDB_DATABASE: ${MONGO_INITDB_DATABASE}
+
+    volumes:
+      # Volumen persistente: los datos sobreviven aunque se baje el contenedor
+      - mongo_data:/data/db
+      # Script de inicializacion que crea colecciones al primer arranque
+      - ./database/init.js:/docker-entrypoint-initdb.d/init.js:ro
+
+    networks:
+      - med_network  # Solo en la red interna, NO expuesto al host
+
+    # SEGURIDAD: No se definen "ports" aqui a proposito.
+    # MongoDB solo es accesible desde el backend dentro de la red interna.
+
+
+  # -----------------------------------------------------------
+  # SERVICIO 2: BACKEND (Flask / Python)
+  # - Expone el puerto 5000 internamente
+  # - Mapeado al puerto 5510 del host segun la red del usuario
+  # - Se comunica con mongo por nombre de servicio, no localhost
+  # -----------------------------------------------------------
+  backend:
+    build:
+      context: ./backend      # Carpeta donde esta el Dockerfile del backend
+      dockerfile: Dockerfile
+    container_name: flask_backend
+    restart: unless-stopped
+
+    environment:
+      # URI de conexion a MongoDB usando el nombre del servicio "mongo"
+      MONGO_URI: ${MONGO_URI}
+      FLASK_SECRET_KEY: ${FLASK_SECRET_KEY}
+      FLASK_ENV: ${FLASK_ENV}
+      FLASK_PORT: ${FLASK_PORT}
+
+    ports:
+      # Mapeo: puerto 5000 del contenedor -> puerto 5510 del host
+      # Permite que el frontend y el navegador lleguen al backend
+      - "5510:5000"
+
+    depends_on:
+      - mongo  # Docker espera que mongo este listo antes de levantar backend
+
+    networks:
+      - med_network
+
+
+  # -----------------------------------------------------------
+  # SERVICIO 3: FRONTEND (Vue.js con Nginx)
+  # - Sirve la aplicacion web al usuario
+  # - Expuesto en el puerto 80 del host
+  # - Se comunica con el backend por HTTP
+  # -----------------------------------------------------------
+  frontend:
+    build:
+      context: ./frontend     # Carpeta donde esta el Dockerfile del frontend
+      dockerfile: Dockerfile
+    container_name: vue_frontend
+    restart: unless-stopped
+
+    environment:
+      # URL del backend que Vue usara para hacer peticiones
+      VITE_API_URL: ${VITE_API_URL}
+
+    ports:
+      # Puerto 80 del contenedor -> puerto 80 del host (acceso web estandar)
+      - "80:80"
+
+    depends_on:
+      - backend  # Se levanta despues del backend
+
+    networks:
+      - med_network
+
+
+# =============================================================
+# VOLUMENES
+# Docker gestiona el almacenamiento persistente aqui.
+# mongo_data: guarda los archivos de MongoDB en el host.
+# =============================================================
+volumes:
+  mongo_data:
+    driver: local   # Almacenamiento local del host
+
+
+# =============================================================
+# REDES
+# Red interna personalizada para que los contenedores
+# se comuniquen entre si de forma segura y aislada.
+# La subred 10.22.24.0/24 es la definida por el usuario.
+# =============================================================
+networks:
+  med_network:
+    driver: bridge       # Tipo de red estandar en Docker para contenedores
+    ipam:
+      config:
+        - subnet: 10.22.24.0/24   # Subred definida por el usuario

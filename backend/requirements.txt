@@ -1,0 +1,17 @@
+# =============================================================
+# DEPENDENCIAS DEL BACKEND FLASK
+# Cada libreria cumple un rol especifico en el proyecto
+# =============================================================
+
+# Flask: framework web minimalista para crear la API REST
+flask==3.0.0
+
+# flask-cors: permite que el frontend (origen diferente) haga
+# peticiones al backend sin que el navegador las bloquee (CORS policy)
+flask-cors==4.0.0
+
+# pymongo: cliente oficial de Python para conectarse a MongoDB
+pymongo==4.6.1
+
+# python-dotenv: carga las variables del archivo .env en Flask
+python-dotenv==1.0.0

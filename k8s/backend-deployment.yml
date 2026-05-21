@@ -1,0 +1,103 @@
+# =============================================================
+# BACKEND-DEPLOYMENT.YML - API Flask en Kubernetes
+#
+# Define el Deployment y Service para el backend Flask.
+#
+# DIFERENCIA IMPORTANTE con MongoDB:
+# El Service de MongoDB era ClusterIP (solo interno).
+# El Service del backend es NodePort, lo que significa que
+# Kubernetes abre un puerto en el nodo para que el frontend
+# y el navegador puedan llegar al backend desde afuera.
+#
+# FLUJO DE RED:
+# Navegador -> NodePort (30510) -> Service -> Pod Flask -> MongoDB
+# =============================================================
+
+# -----------------------------------------------------------
+# PARTE 1: DEPLOYMENT DEL BACKEND FLASK
+# -----------------------------------------------------------
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend-deployment    # Nombre del Deployment
+  labels:
+    app: backend
+
+spec:
+  replicas: 1                 # Una sola instancia del backend es suficiente para desarrollo
+                              # En produccion se pondria 2 o 3 para alta disponibilidad
+  selector:
+    matchLabels:
+      app: backend
+
+  template:
+    metadata:
+      labels:
+        app: backend
+
+    spec:
+      containers:
+        - name: backend
+          # Imagen del backend construida con Docker
+          # "vitalis-backend:latest" es el nombre que le daremos al hacer docker build
+          image: vitalis-backend:latest
+          
+          # imagePullPolicy: Never le dice a Kubernetes que NO intente
+          # descargar la imagen de internet (Docker Hub).
+          # La busca localmente porque ya la construimos con docker build.
+          imagePullPolicy: Never
+          
+          ports:
+            - containerPort: 5000   # Puerto donde Flask escucha dentro del contenedor
+
+          env:
+            # URI de MongoDB apuntando al SERVICE de mongo (no localhost, no IP)
+            # Kubernetes resuelve "mongo-service" al Pod de MongoDB automaticamente
+            - name: MONGO_URI
+              valueFrom:
+                secretKeyRef:
+                  name: mongo-secret
+                  key: mongo-uri          # Lee la URI completa del Secret
+
+            # Clave secreta de Flask para seguridad
+            - name: FLASK_SECRET_KEY
+              value: "clave_ultra_secreta_cambiar_en_produccion_2026"
+
+            # Modo de ejecucion
+            - name: FLASK_ENV
+              value: "development"
+
+            # Puerto en el que corre Flask
+            - name: FLASK_PORT
+              value: "5000"
+
+---
+# -----------------------------------------------------------
+# PARTE 2: SERVICE DEL BACKEND
+# Tipo NodePort: abre un puerto en el nodo de Kubernetes
+# para que sea accesible desde el navegador y el frontend.
+#
+# Con NodePort, el acceso es:
+# http://localhost:30510/api/...
+#
+# El puerto 30510 es el nodePort (puerto externo del nodo).
+# El puerto 5000 es donde Flask escucha internamente.
+# -----------------------------------------------------------
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend-service       # Nombre que usa el frontend para comunicarse internamente
+
+spec:
+  selector:
+    app: backend              # Conecta con los Pods del backend
+
+  type: NodePort              # Expone el servicio fuera del cluster (al navegador)
+
+  ports:
+    - protocol: TCP
+      port: 5000              # Puerto interno del cluster (Pod a Pod)
+      targetPort: 5000        # Puerto donde Flask escucha en el contenedor
+      nodePort: 30510         # Puerto externo del nodo (lo que escribe el usuario en el navegador)
+                              # Rango valido: 30000-32767
+                              # Acceso: http://localhost:30510/api/health

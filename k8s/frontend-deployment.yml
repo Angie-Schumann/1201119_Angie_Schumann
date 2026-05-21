@@ -1,0 +1,81 @@
+# =============================================================
+# FRONTEND-DEPLOYMENT.YML - Interfaz Vue en Kubernetes
+#
+# Define el Deployment y Service para el frontend Vue/Nginx.
+#
+# El frontend es lo que el usuario ve en el navegador.
+# Su Service tambien es NodePort para ser accesible desde afuera.
+#
+# FLUJO COMPLETO DEL SISTEMA EN KUBERNETES:
+# Usuario -> localhost:30080 -> frontend-service -> Pod Vue/Nginx
+#                                                        |
+#                                               llama a la API
+#                                                        |
+#                                            localhost:30510 -> backend-service -> Pod Flask
+#                                                                                      |
+#                                                                              mongo-service -> Pod MongoDB
+# =============================================================
+
+# -----------------------------------------------------------
+# PARTE 1: DEPLOYMENT DEL FRONTEND
+# -----------------------------------------------------------
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend-deployment
+  labels:
+    app: frontend
+
+spec:
+  replicas: 1
+
+  selector:
+    matchLabels:
+      app: frontend
+
+  template:
+    metadata:
+      labels:
+        app: frontend
+
+    spec:
+      containers:
+        - name: frontend
+          # Imagen del frontend construida con docker build
+          # Contiene Vue compilado y servido por Nginx
+          image: vitalis-frontend:latest
+
+          # Never = usar imagen local, no buscar en Docker Hub
+          imagePullPolicy: Never
+
+          ports:
+            - containerPort: 80     # Nginx sirve en el puerto 80 dentro del contenedor
+
+          env:
+            # URL del backend que Vue usa para hacer peticiones HTTP
+            # Apunta al nodePort del backend (lo que es accesible desde el navegador)
+            - name: VITE_API_URL
+              value: "http://localhost:30510/api"
+
+---
+# -----------------------------------------------------------
+# PARTE 2: SERVICE DEL FRONTEND
+# NodePort en el puerto 30080 para acceso desde el navegador.
+# El usuario escribe: http://localhost:30080
+# -----------------------------------------------------------
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend-service
+
+spec:
+  selector:
+    app: frontend
+
+  type: NodePort            # Accesible desde fuera del cluster
+
+  ports:
+    - protocol: TCP
+      port: 80              # Puerto interno
+      targetPort: 80        # Puerto de Nginx en el contenedor
+      nodePort: 30080       # Puerto externo: http://localhost:30080

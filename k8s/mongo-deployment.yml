@@ -1,0 +1,130 @@
+# =============================================================
+# MONGO-DEPLOYMENT.YML - Base de datos MongoDB en Kubernetes
+#
+# Este archivo define DOS cosas en uno:
+# 1. El Deployment: le dice a Kubernetes como crear y mantener
+#    el contenedor de MongoDB (cuantas copias, que imagen usar, etc.)
+# 2. El Service: expone MongoDB dentro del cluster para que
+#    el backend pueda conectarse por nombre, igual que en Docker.
+#
+# DIFERENCIA CON DOCKER COMPOSE:
+# En docker-compose.yml teniamos un bloque "mongo:" con image, ports, etc.
+# En Kubernetes eso se separa en Deployment (el contenedor) y
+# Service (la red/acceso). Es mas codigo pero mas control.
+# =============================================================
+
+# -----------------------------------------------------------
+# PARTE 1: DEPLOYMENT DE MONGODB
+# Un Deployment es el "controlador" que garantiza que siempre
+# haya el numero correcto de Pods corriendo.
+# Si un Pod muere, Kubernetes lo reinicia automaticamente.
+# -----------------------------------------------------------
+apiVersion: apps/v1     # Version de API para Deployments
+kind: Deployment        # Tipo de objeto: Deployment
+metadata:
+  name: mongo-deployment  # Nombre interno del Deployment en Kubernetes
+  labels:
+    app: mongo            # Etiqueta para identificar y agrupar recursos relacionados
+
+spec:
+  replicas: 1           # Cuantas copias del Pod queremos (1 es suficiente para BD)
+  
+  selector:
+    matchLabels:
+      app: mongo        # Kubernetes usa esta etiqueta para saber que Pods maneja este Deployment
+
+  template:             # Plantilla del Pod que se va a crear
+    metadata:
+      labels:
+        app: mongo      # Etiqueta del Pod, debe coincidir con el selector de arriba
+    
+    spec:
+      containers:
+        - name: mongo                 # Nombre del contenedor dentro del Pod
+          image: mongo:6.0           # Imagen oficial de MongoDB (igual que en Docker)
+          
+          ports:
+            - containerPort: 27017   # Puerto donde MongoDB escucha dentro del contenedor
+          
+          env:
+            # Las credenciales vienen del Secret, NO escritas directamente aqui
+            # Esto es equivalente a usar el archivo .env en Docker Compose
+            - name: MONGO_INITDB_ROOT_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: mongo-secret    # Nombre del Secret que creamos antes
+                  key: mongo-user       # Clave dentro del Secret
+
+            - name: MONGO_INITDB_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mongo-secret
+                  key: mongo-password
+
+            - name: MONGO_INITDB_DATABASE
+              value: "medicamentos_db"   # Nombre de la base de datos a crear
+
+          volumeMounts:
+            # Monta el volumen persistente en la carpeta de datos de MongoDB
+            # Equivalente al "volumes: mongo_data:/data/db" de docker-compose
+            - name: mongo-storage
+              mountPath: /data/db
+
+      volumes:
+        # Define el volumen persistente usando un PersistentVolumeClaim
+        # El PVC le pide a Kubernetes espacio en disco permanente
+        - name: mongo-storage
+          persistentVolumeClaim:
+            claimName: mongo-pvc    # Referencia al PVC que definimos abajo
+
+---
+# Separador "---" en YAML permite poner multiples objetos en un mismo archivo
+
+# -----------------------------------------------------------
+# PARTE 1B: PERSISTENT VOLUME CLAIM (PVC)
+# En Docker usabamos "volumes: mongo_data:" y Docker lo manejaba.
+# En Kubernetes tenemos que pedirle espacio al cluster explicitamente.
+# El PVC es la "solicitud de espacio" que hace el Pod.
+# -----------------------------------------------------------
+apiVersion: v1
+kind: PersistentVolumeClaim   # Solicitud de almacenamiento persistente
+metadata:
+  name: mongo-pvc             # Nombre que referencia el Deployment arriba
+spec:
+  accessModes:
+    - ReadWriteOnce           # Solo un Pod puede leer/escribir a la vez (correcto para BD)
+  resources:
+    requests:
+      storage: 1Gi            # Solicita 1 Gigabyte de espacio para los datos de MongoDB
+
+---
+# -----------------------------------------------------------
+# PARTE 2: SERVICE DE MONGODB
+# El Service es la "direccion de red" fija de MongoDB dentro del cluster.
+# Sin Service, los Pods tienen IPs temporales que cambian al reiniciarse.
+# Con Service, el backend siempre se conecta a "mongo-service:27017"
+# sin importar que IP tenga el Pod en ese momento.
+#
+# IMPORTANTE: Este Service es de tipo ClusterIP (el default).
+# ClusterIP = solo accesible DENTRO del cluster, no desde el exterior.
+# Esto mantiene MongoDB protegido, igual que en Docker donde no
+# exponemos el puerto 27017 al host.
+# -----------------------------------------------------------
+apiVersion: v1
+kind: Service               # Tipo de objeto: Service (red)
+metadata:
+  name: mongo-service       # Este nombre es la URL que usara el backend para conectarse
+                            # Flask usara: mongodb://admin:pass@mongo-service:27017/...
+
+spec:
+  selector:
+    app: mongo              # Conecta este Service con los Pods que tienen la etiqueta app=mongo
+  
+  ports:
+    - protocol: TCP
+      port: 27017           # Puerto por el que otros servicios se conectan a MongoDB
+      targetPort: 27017     # Puerto donde MongoDB escucha dentro del contenedor
+  
+  # type: ClusterIP es el default - no hace falta escribirlo
+  # Pero lo dejamos comentado para que quede claro que NO es NodePort ni LoadBalancer
+  # type: ClusterIP         # Solo accesible dentro del cluster (SEGURO)
